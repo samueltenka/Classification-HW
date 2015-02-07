@@ -6,7 +6,8 @@
 import CSV
 import Plot
 from math import exp, log
-from numpy import array, outer
+from numpy import array, outer, transpose
+from numpy.linalg import det, inv
 
 
 def get_xts(filename):
@@ -24,4 +25,49 @@ def compute_params(xts):
     sigmas = {t:sum(outer(x-mus[t], x-mus[t]) for x in C[t])/len(C[t]) for t in [0,1]}
     return phis, mus, sigmas
 
-print(compute_params(get_xts('D1_train.csv')))
+def clogprob(x, t, phis, mus, sigmas): # proportional to logprob
+    si = inv(sigmas[t])
+    return exp(-0.5*transpose(x-mus[t])*si*(x-mus[t]))/det(sigmas[t])
+
+xts = get_xts('D1_train.csv')
+phis, mus, sigmas = compute_params(xts)
+
+
+'''
+def x2s_from(x1, phis, mus, sigmas):
+    x1 += mus
+    Si = {t:inv(sigmas[t]) for t in [0,1]}
+    M = Si[1]-Si[0]
+    s = log(det(Si[1])/det(Si[0]) * phis[1]/phis[0])
+
+    a = -0.5*M[1][1]
+    b = -0.5*x1*(M[0][1]+M[1][0])
+    c = s -0.5*x1*x1*M[0][0]
+
+    discrim = b*b - 4*a*c
+    if discrim < 0: return []
+    return [(-b+discrim)/2*a,
+            (-b-discrim)/2*a]
+
+def generate_boundary(weights, x1_range):
+    x1s = []; x2s = []
+    for n in range(100):
+        x1 = (n-50)*x1_range/100.0; x2ab = x2s_from(x1)
+        if x2ab:
+            x1s += [x1, x1]; x2s += x2ab
+    return x1s, x2s
+
+    xts = get_xts('D'+i+'_train.csv')
+    weights = Ws[j] #compute_weights(xts)
+    x1s = [x1 for (o,x1,x2),t in xts]
+    x1_range = 1.5*(max(x1s)-min(x1s))
+    x1s, x2s = generate_boundary(weights, x1_range)
+    classes = {0:[], 1:[]}
+    for x,t in xts: classes[t].append(x)
+
+    Plot.plot_scatter(classes[0], 0, label='class 0')
+    Plot.plot_scatter(classes[1], 1, label='class 1')
+    Plot.plot_line(x1s, x2s, label='decision boundary')
+    Plot.save_plot('x1', 'x2', 'Logistic Decision Boundary for D'+i,
+                   'log_db_'+i+'.png')
+'''
