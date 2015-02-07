@@ -1,0 +1,27 @@
+'''.............................
+   Creation 2015 by Samuel Tenka
+   .............................'''
+''' logistic classifier'''
+
+import CSV
+import Plot
+from math import exp, log
+from numpy import array, outer
+
+
+def get_xts(filename):
+    reader = CSV.CSV()
+    reader.read_from(filename)
+    return [(array(xt[:-1]), xt[-1]) for xt in reader.rows] # no '1' in front
+
+def compute_params(xts):
+    C={0:[], 1:[]}
+    for x,t in xts:
+        C[t].append(array(x))
+
+    phis = {t:float(len(C[t]))/len(xts) for t in [0,1]}
+    mus = {t:sum(C[t])/len(C[t]) for t in [0,1]}
+    sigmas = {t:sum(outer(x-mus[t], x-mus[t]) for x in C[t])/len(C[t]) for t in [0,1]}
+    return phis, mus, sigmas
+
+print(compute_params(get_xts('D1_train.csv')))
