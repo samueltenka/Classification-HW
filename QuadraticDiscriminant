@@ -5,8 +5,8 @@
 
 import CSV
 import Plot
-from math import exp, log
-from numpy import array, outer, transpose
+from math import log
+from numpy import array, outer, dot
 from numpy.linalg import det, inv
 
 
@@ -28,8 +28,8 @@ def compute_params(xts):
 def log_prob(x, t, phis, mus, sigmas): # proportional to logprob
     si = inv(sigmas[t])
     diff = x-mus[t]
-    quad = (transpose(diff)*si*diff)[0][0]
-    return log(det(si))/2-quad/2+log(phis[t])
+    quad = dot(dot(diff,si),diff)
+    return log(det(si))/2 - quad/2 + log(phis[t])
 
 for i in '123':
     xts = get_xts('D'+i+'_train.csv')
