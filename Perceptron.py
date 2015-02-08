@@ -23,7 +23,7 @@ def compute_weights(xts):
     while True:
         for x,t in xts:
             if predict(x,weights)!=t:
-                weights += learning_rate*x
+                weights += learning_rate*x*(1 if t==1 else -1)
                 count += 1;
                 if count>=num_steps: return weights
 
