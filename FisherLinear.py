@@ -4,6 +4,7 @@
 ''' Fisher linear classifier'''
 
 import CSV
+import Plot
 from numpy import array, outer, dot, vdot
 from numpy.linalg import inv
 
@@ -21,9 +22,28 @@ def compute_params(xts):
     offset = vdot(weights, (mus[1]+mus[0])/2)
     return weights, offset*1.0
 
-for i in '123':
+def generate_boundary(weights, offset, x1_range):
+    x1s = [x1 for (x1,x2),t in xts]
+    x1_range = 1.5*(max(x1s)-min(x1s))
+
+    x1s = [(n-50)*x1_range/100.0 for n in range(100)]
+    x2s = [(-offset-weights[0]*x1)/weights[1] for x1 in x1s]
+    return x1s, x2s
+
+
+for i,j in zip('123', [0,1,2]):
     xts = get_xts('D'+i+'_train.csv')
-    weights, offset = compute_params(xts)
-    pred = lambda x: 1 if vdot(weights,x)-offset>0 else 0
+    weights, offset = compute_params(xts); print(weights)
+    x1s, x2s = generate_boundary(weights, offset, xts)
+    classes = {0:[], 1:[]}
+    for x,t in xts: classes[t].append(x)
+
+    Plot.plot_scatter(classes[0], 0, label='class 0')
+    Plot.plot_scatter(classes[1], 1, label='class 1')
+    Plot.plot_line(x1s, x2s, label='decision boundary')
+    Plot.save_plot('x1', 'x2', 'Logistic Decision Boundary for D'+i,
+                   'fisher_'+i+'.png')
+
+    pred = lambda x: vdot(weights, x)-offset > 0
     Errors = [x for x,t in xts if t!=pred(x)]
-    print('E'+i+':', len(Errors))
+    print('E', len(Errors))
